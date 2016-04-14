@@ -1,2 +1,1 @@
-# rnn-from-scratch
-Implementing Recurrent Neural Network from Scratch
+# Implementing Recurrent Neural Network from Scratch

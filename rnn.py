@@ -10,9 +10,9 @@ class Model:
         self.word_dim = word_dim
         self.hidden_dim = hidden_dim
         self.bptt_truncate = bptt_truncate
-        self.U = np.random.uniform(-np.sqrt(1./word_dim), np.sqrt(1./word_dim), (hidden_dim, word_dim))
-        self.W = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (hidden_dim, hidden_dim))
-        self.V = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (word_dim, hidden_dim))
+        self.U = np.random.uniform(-np.sqrt(1. / word_dim), np.sqrt(1. / word_dim), (hidden_dim, word_dim))
+        self.W = np.random.uniform(-np.sqrt(1. / hidden_dim), np.sqrt(1. / hidden_dim), (hidden_dim, hidden_dim))
+        self.V = np.random.uniform(-np.sqrt(1. / hidden_dim), np.sqrt(1. / hidden_dim), (word_dim, hidden_dim))
 
     '''
         forward propagation (predicting word probabilities)
@@ -23,14 +23,14 @@ class Model:
         # The total number of time steps
         T = len(x)
         layers = []
-        previous_s = np.zeros(self.hidden_dim)
+        prev_s = np.zeros(self.hidden_dim)
         # For each time step...
         for t in range(T):
             layer = RNNLayer()
             input = np.zeros(self.word_dim)
             input[x[t]] = 1
-            layer.forward(input, previous_s, self.U, self.W, self.V)
-            previous_s = layer.s
+            layer.forward(input, prev_s, self.U, self.W, self.V)
+            prev_s = layer.s
             layers.append(layer)
         return layers
 
@@ -63,23 +63,20 @@ class Model:
         dW = np.zeros(self.W.shape)
 
         T = len(layers)
-        previous_s_t = np.zeros(self.hidden_dim)
+        prev_s_t = np.zeros(self.hidden_dim)
         diff_s = np.zeros(self.hidden_dim)
         for t in range(0, T):
             dmulv = output.diff(layers[t].mulv, y[t])
             input = np.zeros(self.word_dim)
             input[x[t]] = 1
-            dprevious_s, dU_t, dW_t, dV_t = layers[t].backward(input, previous_s_t, self.U, self.W, self.V, diff_s, dmulv)
-            previous_s_t = layers[t].s
+            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(input, prev_s_t, self.U, self.W, self.V, diff_s, dmulv)
+            prev_s_t = layers[t].s
             dmulv = np.zeros(self.word_dim)
             for i in range(t-1, max(-1, t-self.bptt_truncate-1), -1):
                 input = np.zeros(self.word_dim)
                 input[x[i]] = 1
-                if i == 0:
-                    previous_s_i = np.zeros(self.hidden_dim)
-                else:
-                    previous_s_i = layers[i-1].s
-                dprevious_s, dU_i, dW_i, dV_i = layers[i].backward(input, previous_s_i, self.U, self.W, self.V, dprevious_s, dmulv)
+                prev_s_i = np.zeros(self.hidden_dim) if i == 0 else layers[i-1].s
+                dprev_s, dU_i, dW_i, dV_i = layers[i].backward(input, prev_s_i, self.U, self.W, self.V, dprev_s, dmulv)
                 dU_t += dU_i
                 dW_t += dW_i
             dV += dV_t

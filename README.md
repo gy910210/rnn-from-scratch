@@ -5,33 +5,40 @@ This post is inspired by [recurrent-neural-networks-tutorial](http://www.wildml.
 
 In this tutorial, we will focus on how to train RNN by [Backpropagation Through Time (BPTT)](http://www.wildml.com/2015/10/recurrent-neural-networks-tutorial-part-3-backpropagation-through-time-and-vanishing-gradients/), based on the **computation graph** of RNN and do **automatic differentiation**. You can find that it is more simple and reliable to calculate the gradient in this way than you do it by hand.
 
-This post will take RNN language model (rnnlm) as example. More about the fancy application of RNN can be found [here](http://karpathy.github.io/2015/05/21/rnn-effectiveness/).
+This post will take RNN language model (rnnlm) as example. More about the fancy applications of RNN can be found [here](http://karpathy.github.io/2015/05/21/rnn-effectiveness/).
 ## How to train RNN
-The architecture of RNN can be as the following figure. 
+The architecture of RNN can be as the following figure.
+
 ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/rnn.jpg)
 
 You can find that the parameters `(W, U, V)` are shared in different time steps. And the output in each time step can be **softmax**. So you can use **cross entropy** loss as an error function and use some optimizing method (e.g. gradient descent) to calculate the optimized parameters `(W, U, V)`.
 
 Let recap the equations of our RNN:
+
 ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/rnn_equation.png)
 
 We also defined our loss, or error, to be the cross entropy loss, given by:
+
 ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/rnn_loss.png)
 
 Here `y_t` is the correct word at time step `t`, and `y^_t` is our prediction. We typically treat the full sequence (sentence) as one training example, so the total error is just the sum of the errors at each time step (word).
+
 ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/rnn-bptt1.png)
 
-Remember that our goal is to calculate the gradients of the error with respect to our parameters `U`, `V` and 'W' and then learn good parameters using optimizing method (in this post we use **Stochastic Gradient Descent**). Just like we sum up the errors, we also sum up the gradients at each time step for one training example:  ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/gradient.png). That is we should calculate `dEt/dW`, `dEt/dU` and `dEt/dV`, then sum up all time steps.
+Remember that our goal is to calculate the gradients of the error with respect to our parameters `U`, `V` and `W` and then learn good parameters using optimizing method (in this post we use **Stochastic Gradient Descent**). Just like we sum up the errors, we also sum up the gradients at each time step for one training example:  ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/gradient.png). That is we should calculate `dEt/dW`, `dEt/dU` and `dEt/dV`, then sum up all time steps.
 
 It is simple to calculate `dEt/dV`, because it only depends on the values at the current time step. But the story is different for `dEt/dW` and `dEt/dV`. Note that `s_3 = tanh(Ux_3 + Ws_2)` depend on `s_2`, which depends on `W`, `U` and `s_1`, and so on.  So if we take the derivative with respect to `W` we can't treat `s_2` as a constant! We need to apply the chain rule again. You can have a view from the following figure.
+
 ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/rnn-bptt-with-gradients.png)
 
 Now use **computation graph** to represent `E1` as an example and calculate `dE1/dW`, `dE1/dU` is the same idea.
+
 ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/rnn-compuattion-graph.png)
 
 Note that this is exactly the same as the standard backpropagation algorithm that we use in deep [Feedforward Neural Networks](https://github.com/pangolulu/neural-network-from-scratch). The key difference is that we sum up the gradients for `W` at each time step. In a traditional NN we don’t share parameters across layers, so we don’t need to sum anything.  But in my opinion BPTT is just a fancy name for standard backpropagation on an unrolled RNN.
 
 To simplify the **computation graph** to make it efficient, we can integrate some small operation units to a big operation unit. You can have a look the following figure. Note that the operation unit should also implement the `forward` function and `backward` function.
+
 ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/rnn-compuattion-graph_2.png)
 
 The implementation of all operation unit and softmax output can be found as follows:
@@ -113,7 +120,7 @@ Now that we are able to calculate the gradients for our parameters we can use SG
 
 ## Implement
 ### Initialization
-Initializing the parameters  `U`, `V` and `W` is a bit tricky. We can’t just initialize them to 0’s because that would result in symmetric calculations in all our layers. We must initialize them randomly. Because proper initialization seems to have an impact on training results there has been lot of research in this area. It turns out that the best initialization depends on the activation function (`tanh` in our case) and one recommended approach is to initialize the weights randomly in the interval from [!]() where `n` is the number of incoming connections from the previous layer. 
+Initializing the parameters  `U`, `V` and `W` is a bit tricky. We can’t just initialize them to 0’s because that would result in symmetric calculations in all our layers. We must initialize them randomly. Because proper initialization seems to have an impact on training results there has been lot of research in this area. It turns out that the best initialization depends on the activation function (`tanh` in our case) and one recommended approach is to initialize the weights randomly in the interval from ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/init.png) where `n` is the number of incoming connections from the previous layer. 
 ```python
 class Model:
     def __init__(self, word_dim, hidden_dim=100, bptt_truncate=4):

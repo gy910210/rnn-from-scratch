@@ -219,7 +219,11 @@ def bptt(self, x, y):
 ```
 
 ### SGD Implementation
-Now that we are able to calculate the gradients for our parameters we can implement SGD. I like to do this in two steps: 1. A function `sdg_step` that calculates the gradients and performs the updates for one batch. 2. An outer loop that iterates through the training set and adjusts the learning rate.
+Now that we are able to calculate the gradients for our parameters we can implement SGD. I like to do this in two steps:
+
+1. A function `sdg_step` that calculates the gradients and performs the updates for one batch.
+2. An outer loop that iterates through the training set and adjusts the learning rate.
+
 ```python
 def sgd_step(self, x, y, learning_rate):
     dU, dW, dV = self.bptt(x, y)
@@ -261,7 +265,7 @@ rnn = Model(word_dim, hidden_dim)
 rnn.sgd_step(X_train[10], y_train[10], 0.005)
 ```
 
-Bad new is that  one step of SGD takes much seconds on my laptop. We have about 80,000 examples in our training data, so one epoch (iteration over the whole data set) would take several hours. Multiple epochs would take days, or even weeks! 
+Bad new is that  one step of SGD takes a few seconds on my laptop. We have about 80,000 examples in our training data, so one epoch (iteration over the whole data set) would take several hours. Multiple epochs would take days, or even weeks! 
 
 There are many ways to speed up our code. One is to implement our code on GPU with some library like **Theano**. But in this tutorial, let’s just try to run SGD with a small dataset and check if the loss actually decreases:
 ```python

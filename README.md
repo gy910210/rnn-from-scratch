@@ -27,7 +27,7 @@ Here `y_t` is the correct word at time step `t`, and `y^_t` is our prediction. W
 
 Remember that our goal is to calculate the gradients of the error with respect to our parameters `U`, `V` and `W` and then learn good parameters using optimizing method (in this post we use **Stochastic Gradient Descent**). Just like we sum up the errors, we also sum up the gradients at each time step for one training example:  ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/gradient.png). That is we should calculate `dEt/dW`, `dEt/dU` and `dEt/dV`, then sum up all time steps.
 
-It is simple to calculate `dEt/dV`, because it only depends on the values at the current time step. But the story is different for `dEt/dW` and `dEt/dV`. Note that `s_3 = tanh(Ux_3 + Ws_2)` depend on `s_2`, which depends on `W`, `U` and `s_1`, and so on.  So if we take the derivative with respect to `W` we can't treat `s_2` as a constant! We need to apply the chain rule again. You can have a view from the following figure.
+It is simple to calculate `dEt/dV`, because it only depends on the values at the current time step. But the story is different for `dEt/dW` and `dEt/dU`. Note that `s_3 = tanh(Ux_3 + Ws_2)` depend on `s_2`, which depends on `W`, `U` and `s_1`, and so on.  So if we take the derivative with respect to `W` we can't treat `s_2` as a constant! We need to apply the chain rule again. You can have a view from the following figure.
 
 ![](https://github.com/pangolulu/rnn-from-scratch/raw/master/figures/rnn-bptt-with-gradients.png)
 
